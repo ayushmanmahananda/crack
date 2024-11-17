@@ -6,19 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    
+    <!-- Firebase SDK 8.x -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
     <style>
         #map {
-            height: 100vh; /* Fullscreen height */
-            width: 100%;   /* Fullscreen width */
+            height: 100vh;
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
-        // Initialize Firebase
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDk9EbdGQ8WP4hAoSU9oQow9lBbTH4BTVw",
             authDomain: "es-project-5c5b2.firebaseapp.com",
@@ -28,8 +31,10 @@
             messagingSenderId: "556570413604",
             appId: "1:556570413604:web:b4bcbcac473bb70f9966b1"
         };
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const database = firebase.database(); // Use Firebase Realtime Database
 
         // Initialize the map
         var map = L.map('map').setView([28.7041, 77.1025], 10); // Default coordinates
@@ -48,8 +53,6 @@
                         .bindPopup(crack.status);
                 });
             }
-        }, (error) => {
-            console.error("Error fetching data: ", error);
         });
     </script>
 </body>
