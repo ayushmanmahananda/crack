@@ -1,27 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenStreetMap</title>
+    <title>Crack Detection Map</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 
-    <script>
-        var map = L.map('map').setView([51.505, -0.09], 13); // Default location
-
-        // Set up the OSM tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        function dropPin(lat, lng) {
-            var marker = L.marker([lat, lng]).addTo(map);  // Add pin at lat, lng
-            map.setView([lat, lng], 13);  // Adjust view to the marker's location
-        }
-    </script>
+    <style>
+        #map { height: 100vh; width: 100%; }
+    </style>
 </head>
 <body>
-    <div id="map" style="height: 100%; width: 100%;"></div>
+    <div id="map"></div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Initialize Map
+        var map = L.map('map').setView([28.7041, 77.1025], 10); // Default location
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Function to drop pins dynamically
+        function dropPin(lat, lng, info) {
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(info).openPopup();
+            map.setView([lat, lng], 13);
+        }
+
+        // Fetch Crack Data from Firebase
+        db.ref('cracks').on('value', (snapshot) => {
+            const cracks = snapshot.val();
+            for (const key in cracks) {
+                const crack = cracks[key];
+                dropPin(crack.latitude, crack.longitude, crack.status);
+            }
+        });
+    </script>
 </body>
 </html>
