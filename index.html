@@ -1,41 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Crack Detection Map</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap" async defer></script>
-  <style>
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-  </style>
+    <title>OpenStreetMap</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        var map = L.map('map').setView([51.505, -0.09], 13); // Default location
+
+        // Set up the OSM tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        function dropPin(lat, lng) {
+            var marker = L.marker([lat, lng]).addTo(map);  // Add pin at lat, lng
+            map.setView([lat, lng], 13);  // Adjust view to the marker's location
+        }
+    </script>
 </head>
 <body>
-  <h3>Detected Cracks Location</h3>
-  <div id="map"></div>
-  
-  <script>
-    var map;
-    var markers = [];
-    
-    // Initialize the map
-    function initMap() {
-      var center = {lat: 28.7041, lng: 77.1025}; // Default location (latitude and longitude)
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
-        center: center
-      });
-    }
-
-    // Function to drop a marker
-    function dropPin(lat, lng) {
-      var position = {lat: lat, lng: lng};
-      var marker = new google.maps.Marker({
-        position: position,
-        map: map
-      });
-      markers.push(marker);
-    }
-  </script>
+    <div id="map" style="height: 100%; width: 100%;"></div>
 </body>
 </html>
