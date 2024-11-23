@@ -46,13 +46,23 @@
         database.ref('cracks').on('value', (snapshot) => {
             const cracks = snapshot.val();
             if (cracks) {
+                let markers = [];
                 Object.keys(cracks).forEach((key) => {
                     const crack = cracks[key];
-                    L.marker([crack.latitude, crack.longitude])
+                    const marker = L.marker([crack.latitude, crack.longitude])
                         .addTo(map)
                         .bindPopup(crack.status);
+                    markers.push(marker.getLatLng()); // Collect marker positions
                 });
+
+                // Automatically adjust map view to include all markers
+                if (markers.length > 0) {
+                    const bounds = L.latLngBounds(markers);
+                    map.fitBounds(bounds); // Adjust map to fit all markers
+                }
             }
+        }, (error) => {
+            console.error("Error fetching crack data:", error);
         });
     </script>
 </body>
