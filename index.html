@@ -1,22 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Crack Detection Map</title>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crack Detection Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        
         #map {
-            height: 100vh; /* Fullscreen height */
+            height: 100%;
             width: 100%;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
+
     <script>
         // Initialize Firebase
         const firebaseConfig = {
@@ -31,23 +37,53 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // Initialize the map
+        // Initialize the map with a default view
         var map = L.map('map').setView([28.7041, 77.1025], 10); // Default coordinates
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        // Variables to store the min/max latitude and longitude
+        let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
+
         // Fetch cracks from Firebase and add markers
         database.ref('cracks').on('value', (snapshot) => {
             const cracks = snapshot.val();
+            console.log(cracks);  // Debugging line to check if data is fetched correctly
             if (cracks) {
-                Object.keys(cracks).forEach((key) => {
-                    const crack = cracks[key];
-                    L.marker([crack.latitude, crack.longitude])
+                // Clear existing markers
+                map.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                // Loop through cracks and add markers
+                Object.keys(cracks).forEach((timestamp) => {
+                    const crack = cracks[timestamp];
+                    const { latitude, longitude, status } = crack;
+
+                    // Update min/max latitude and longitude
+                    minLat = Math.min(minLat, latitude);
+                    maxLat = Math.max(maxLat, latitude);
+                    minLon = Math.min(minLon, longitude);
+                    maxLon = Math.max(maxLon, longitude);
+
+                    // Add marker for the crack
+                    L.marker([latitude, longitude])
                         .addTo(map)
-                        .bindPopup(crack.status)
+                        .bindPopup(`<strong>Status:</strong> ${status}<br><strong>Timestamp:</strong> ${timestamp}`)
                         .openPopup();
                 });
+
+                // Dynamically center the map
+                const centerLat = (minLat + maxLat) / 2;
+                const centerLon = (minLon + maxLon) / 2;
+                const zoomLevel = Math.max(10, Math.min(15, 12 - (maxLat - minLat) * 2));
+
+                map.setView([centerLat, centerLon], zoomLevel);
+            } else {
+                console.log("No cracks data found.");
             }
         });
     </script>
