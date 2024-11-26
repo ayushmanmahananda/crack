@@ -6,24 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    
-    <!-- Firebase SDK 8.x -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
     <style>
-        #map {
-            height: 100vh;
-            width: 100%;
-        } 
+        #map { height: 100vh; width: 100%; }
     </style>
 </head>
 <body>
     <div id="map"></div>
+
     <script>
-        // Firebase Configuration
+        // Initialize Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyDk9EbdGQ8WP4hAoSU9oQow9lBbTH4BTVw",
+           apiKey: "AIzaSyDk9EbdGQ8WP4hAoSU9oQow9lBbTH4BTVw",
             authDomain: "es-project-5c5b2.firebaseapp.com",
             databaseURL: "https://es-project-5c5b2-default-rtdb.firebaseio.com",
             projectId: "es-project-5c5b2",
@@ -31,58 +27,29 @@
             messagingSenderId: "556570413604",
             appId: "1:556570413604:web:b4bcbcac473bb70f9966b1"
         };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-        };
+        // Initialize Map
+        var map = L.map('map').setView([28.7041, 77.1025], 10); // Default location
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        // Initialize the map
-        var map = L.map('map').setView([28.7041, 77.1025], 10); // Default location (center)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Store markers to dynamically adjust the view
-        let markers = [];
+        // Function to drop pins dynamically
+        function dropPin(lat, lng, info) {
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup(info).openPopup();
+            map.setView([lat, lng], 13);
+        }
 
-        // Load existing cracks from Firebase
-        database.ref('cracks').once('value', (snapshot) => {
+        // Fetch Crack Data from Firebase
+        db.ref('cracks').on('value', (snapshot) => {
             const cracks = snapshot.val();
-            if (cracks) {
-                Object.keys(cracks).forEach((key) => {
-                    const crack = cracks[key];
-                    if (crack.latitude && crack.longitude) {
-                        const marker = L.marker([crack.latitude, crack.longitude])
-                            .addTo(map)
-                            .bindPopup(crack.status);
-                        markers.push(marker.getLatLng());
-                    }
-                });
-
-                // Adjust the map to show all markers
-                if (markers.length > 0) {
-                    const bounds = L.latLngBounds(markers);
-                    map.fitBounds(bounds);
-                }
-            }
-        }, (error) => {
-            console.error("Error loading initial cracks:", error);
-        });
-
-        // Listen for real-time additions of cracks
-        database.ref('cracks').on('child_added', (snapshot) => {
-            const crack = snapshot.val();
-            if (crack && crack.latitude && crack.longitude) {
-                // Add a marker for the new crack
-                L.marker([crack.latitude, crack.longitude])
-                    .addTo(map)
-                    .bindPopup(crack.status)
-                    .openPopup();
-
-                // Center map to the new crack location
-                map.setView([crack.latitude, crack.longitude], 15);
+            for (const key in cracks) {
+                const crack = cracks[key];
+                dropPin(crack.latitude, crack.longitude, crack.status);
             }
         });
     </script>
